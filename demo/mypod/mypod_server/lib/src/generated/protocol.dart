@@ -10,7 +10,10 @@ library protocol; // ignore_for_file: no_leading_underscores_for_library_prefixe
 import 'package:serverpod/serverpod.dart' as _i1;
 import 'package:serverpod/protocol.dart' as _i2;
 import 'example.dart' as _i3;
+import 'todo.dart' as _i4;
+import 'package:mypod_server/src/generated/todo.dart' as _i5;
 export 'example.dart';
+export 'todo.dart';
 
 class Protocol extends _i1.SerializationManagerServer {
   Protocol._();
@@ -21,8 +24,51 @@ class Protocol extends _i1.SerializationManagerServer {
 
   static final Protocol _instance = Protocol._();
 
-  static final targetDatabaseDefinition = _i2.DatabaseDefinition(
-      tables: [..._i2.Protocol.targetDatabaseDefinition.tables]);
+  static final targetDatabaseDefinition = _i2.DatabaseDefinition(tables: [
+    _i2.TableDefinition(
+      name: 'todo',
+      schema: 'public',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.integer,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'todo_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'name',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'isDone',
+          columnType: _i2.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'todo_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            )
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        )
+      ],
+      managed: true,
+    ),
+    ..._i2.Protocol.targetDatabaseDefinition.tables,
+  ]);
 
   @override
   T deserialize<T>(
@@ -36,8 +82,22 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == _i3.Example) {
       return _i3.Example.fromJson(data, this) as T;
     }
+    if (t == _i4.Todo) {
+      return _i4.Todo.fromJson(data, this) as T;
+    }
     if (t == _i1.getType<_i3.Example?>()) {
       return (data != null ? _i3.Example.fromJson(data, this) : null) as T;
+    }
+    if (t == _i1.getType<_i4.Todo?>()) {
+      return (data != null ? _i4.Todo.fromJson(data, this) : null) as T;
+    }
+    if (t == Map<String, String>) {
+      return (data as Map).map((k, v) =>
+          MapEntry(deserialize<String>(k), deserialize<String>(v))) as dynamic;
+    }
+    if (t == List<_i5.Todo>) {
+      return (data as List).map((e) => deserialize<_i5.Todo>(e)).toList()
+          as dynamic;
     }
     try {
       return _i2.Protocol().deserialize<T>(data, t);
@@ -50,6 +110,9 @@ class Protocol extends _i1.SerializationManagerServer {
     if (data is _i3.Example) {
       return 'Example';
     }
+    if (data is _i4.Todo) {
+      return 'Todo';
+    }
     return super.getClassNameForObject(data);
   }
 
@@ -57,6 +120,9 @@ class Protocol extends _i1.SerializationManagerServer {
   dynamic deserializeByClassName(Map<String, dynamic> data) {
     if (data['className'] == 'Example') {
       return deserialize<_i3.Example>(data['data']);
+    }
+    if (data['className'] == 'Todo') {
+      return deserialize<_i4.Todo>(data['data']);
     }
     return super.deserializeByClassName(data);
   }
@@ -68,6 +134,10 @@ class Protocol extends _i1.SerializationManagerServer {
       if (table != null) {
         return table;
       }
+    }
+    switch (t) {
+      case _i4.Todo:
+        return _i4.Todo.t;
     }
     return null;
   }

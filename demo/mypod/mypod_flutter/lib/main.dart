@@ -46,6 +46,19 @@ class MyHomePageState extends State<MyHomePage> {
 
   final _textEditingController = TextEditingController();
 
+  late Future<List<Todo>> todos;
+
+  @override
+  void initState() {
+    // todos = client.todo.loadTodos();
+    _loadTodos();
+    super.initState();
+  }
+
+  void _loadTodos() {
+    todos = client.todo.loadTodos();
+  }
+
   // Calls the `hello` method of the `example` endpoint. Will set either the
   // `_resultMessage` or `_errorMessage` field, depending on if the call
   // is successful.
@@ -54,6 +67,40 @@ class MyHomePageState extends State<MyHomePage> {
       final result = await client.example.hello(_textEditingController.text);
       setState(() {
         _resultMessage = result;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = '$e';
+      });
+    }
+  }
+
+  void _callGoodbye() async {
+    try {
+      final result = await client.example.goodbye(_textEditingController.text);
+      setState(() {
+        _resultMessage = result['goodbye'];
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = '$e';
+      });
+    }
+  }
+
+  void _saveTodo() async {
+    try {
+      final savedTodo = await client.todo.addTodo(
+        Todo(
+          name: _textEditingController.text,
+          isDone: false,
+        ),
+      );
+
+      setState(() {
+        _loadTodos();
+        _resultMessage = 'Saved Todo: $savedTodo';
+        _textEditingController.text = '';
       });
     } catch (e) {
       setState(() {
@@ -84,13 +131,35 @@ class MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: ElevatedButton(
-                onPressed: _callHello,
+                onPressed: _saveTodo,
                 child: const Text('Send to Server'),
               ),
             ),
             _ResultDisplay(
               resultMessage: _resultMessage,
               errorMessage: _errorMessage,
+            ),
+            const SizedBox(height: 10),
+            FutureBuilder<List<Todo>>(
+              future: todos,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator.adaptive();
+                }
+                final loadedTodos = snapshot.data!;
+
+                return Column(
+                  children: <Widget>[
+                    for (Todo todo in loadedTodos)
+                      Card(
+                        child: ListTile(
+                          leading: Text(todo.id.toString()),
+                          title: Text(todo.name),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ),
